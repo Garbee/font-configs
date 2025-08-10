@@ -1,0 +1,64 @@
+name: Check Monaspace latest version
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  get-version:
+    name: Get latest release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_latest.outputs.result }}
+      match_found: ${{ steps.check_release.outputs.result }}
+    steps:
+      - name: Fetch latest monaspace release
+        id: get_latest
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          result-encoding: string
+          script: |
+            try {
+              const rel = await github.rest.repos.getLatestRelease({ owner: 'githubnext', repo: 'monaspace' });
+              core.info(`Latest release tag: ${rel.data.tag_name}`);
+              // actions/github-script exposes the returned value as step output 'result'
+              return rel.data.tag_name;
+            } catch (error) {
+              core.setFailed(`Failed to fetch latest release: ${error.message}`);
+            }
+      - name: Check for matching release in this repo
+        id: check_release
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          TAG: ${{ steps.get_latest.outputs.result }}
+        with:
+          result-encoding: string
+          script: |
+            const tag = process.env.TAG;
+            try {
+              await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+              core.info(`Found release with tag ${tag} in ${context.repo.owner}/${context.repo.repo}`);
+              return 'true';
+            } catch (error) {
+              if (error.status === 404) {
+                core.info(`No release with tag ${tag} in ${context.repo.owner}/${context.repo.repo}`);
+                return 'false';
+              }
+              core.setFailed(`Failed to check release in current repo: ${error.message}`);
+            }
+
+      - name: Print status
+        run: |
+          if [ "${{ steps.check_release.outputs.result }}" = "true" ]; then
+            echo "Match found";
+          else
+            echo "No match found";
+          fi
