@@ -54,22 +54,7 @@ jobs:
         run: |
           set -euo pipefail
           name="${{ fromJson(steps.resolve.outputs.result).name }}"
-          mkdir -p monaspace_release
-          prefix="fonts/variable"
-          echo "Extracting only entries under prefix: '$prefix'"
-          # List archive entries and pick only those starting with the prefix, then feed to unzip via -@
-          # Use a temp file to remain compatible with macOS bash (no mapfile in bash 3.x).
-          tmp_list="$(mktemp)"
-          # -Z1 prints file list, one per line
-          unzip -Z1 "$name" | awk -v p="$prefix" 'index($0,p) == 1' > "$tmp_list"
-          if [ ! -s "$tmp_list" ]; then
-            echo "No entries found under prefix '$prefix' in $name" >&2
-            rm -f "$tmp_list"
-            exit 1
-          fi
-          # -@ reads the list of files to extract from stdin
-          unzip -o "$name" -d monaspace_release -@ < "$tmp_list"
-          rm -f "$tmp_list"
+          unzip -j "$name" "*/fonts/variable/*" -d monaspace_release
           rm -f "$name"
 
       - name: List extracted contents
