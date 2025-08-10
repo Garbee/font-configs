@@ -1,0 +1,63 @@
+name: Make Configuration Profile
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Monaspace release tag (e.g. v1.200.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  download-and-unzip:
+    name: Download and unzip monaspace ${{ inputs.version }}
+    runs-on: macos-latest
+    steps:
+      - name: Resolve release asset URL
+        id: resolve
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          result-encoding: json
+          script: |
+            const version = `${{ inputs.version }}`;
+            try {
+              const { data: rel } = await github.rest.repos.getReleaseByTag({
+                owner: 'githubnext',
+                repo: 'monaspace',
+                tag: version,
+              });
+              const assets = rel.assets || [];
+              // Prefer a .zip asset (common for font bundles)
+              const zip = assets.find(a => a.name && a.name.toLowerCase().endsWith('.zip')) || null;
+              if (!zip) {
+                core.setFailed(`No .zip assets found for monaspace release ${version}`);
+                return;
+              }
+              core.info(`Selected asset: ${zip.name}`);
+              return { url: zip.browser_download_url, name: zip.name };
+            } catch (err) {
+              core.setFailed(`Failed to resolve monaspace release ${version}: ${err.message}`);
+            }
+
+      - name: Download asset
+        run: |
+          set -euo pipefail
+          url="${{ fromJson(steps.resolve.outputs.result).url }}"
+          name="${{ fromJson(steps.resolve.outputs.result).name }}"
+          echo "Downloading $name from $url"
+          curl -L --fail -o "$name" "$url"
+
+      - name: Unzip asset
+        run: |
+          set -euo pipefail
+          name="${{ fromJson(steps.resolve.outputs.result).name }}"
+          mkdir -p monaspace_release
+          unzip -o "$name" -d monaspace_release
+
+      - name: List extracted contents
+        run: |
+          echo "Contents of monaspace_release:"
+          ls -la monaspace_release
