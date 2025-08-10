@@ -5,9 +5,9 @@
   Output:
     - monaspace-fonts-<version>.mobileconfig (or monaspace-fonts.mobileconfig)
 */
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 
 const version = (process.env.MONASPACE_VERSION || '').trim();
 const fontDir = 'monaspace_release';
