@@ -56,6 +56,7 @@ jobs:
           name="${{ fromJson(steps.resolve.outputs.result).name }}"
           unzip -j "$name" "*/fonts/variable/*" -d monaspace_release
           rm -f "$name"
+          rm monaspace_release/._M*
 
       - name: List extracted contents
         run: |
