@@ -41,7 +41,6 @@ jobs:
             } catch (err) {
               core.setFailed(`Failed to resolve monaspace release ${version}: ${err.message}`);
             }
-
       - name: Download asset
         run: |
           set -euo pipefail
@@ -49,16 +48,66 @@ jobs:
           name="${{ fromJson(steps.resolve.outputs.result).name }}"
           echo "Downloading $name from $url"
           curl -L --fail -o "$name" "$url"
-
       - name: Unzip asset
         run: |
           set -euo pipefail
           name="${{ fromJson(steps.resolve.outputs.result).name }}"
           unzip -j "$name" "*/fonts/variable/*" -d monaspace_release
           rm -f "$name"
-          rm monaspace_release/._M*
-
-      - name: List extracted contents
+          rm -f monaspace_release/._M*
+      - name: Build .mobileconfig profile with fonts
+        env:
+          MONASPACE_VERSION: ${{ inputs.version }}
         run: |
-          echo "Contents of monaspace_release:"
-          ls -la monaspace_release
+          set -euo pipefail
+          python3 - << 'PY'
+          import os, sys, uuid, plistlib
+          version = os.environ.get('MONASPACE_VERSION', '').strip()
+          font_dir = 'monaspace_release'
+          if not os.path.isdir(font_dir):
+            print(f"Font directory not found: {font_dir}", file=sys.stderr)
+            sys.exit(1)
+          payloads = []
+          for fn in sorted(os.listdir(font_dir)):
+            if not fn.lower().endswith((".ttf", ".otf")):
+              continue
+            path = os.path.join(font_dir, fn)
+            if not os.path.isfile(path):
+              continue
+            with open(path, 'rb') as f:
+              data = f.read()
+            stem = os.path.splitext(fn)[0]
+            payloads.append({
+              'Font': data,
+              'Name': fn,
+              'PayloadIdentifier': f'me.garbee.monaspace.font.{stem}',
+              'PayloadType': 'com.apple.font',
+              'PayloadUUID': str(uuid.uuid4()),
+              'PayloadVersion': 1,
+            })
+          if not payloads:
+            print('No .ttf or .otf fonts found to include in the profile.', file=sys.stderr)
+            sys.exit(2)
+          profile = {
+            'PayloadContent': payloads,
+            'PayloadDisplayName': f'Monaspace Fonts {version}' if version else 'Monaspace Fonts',
+            'PayloadDescription': 'Installs Monaspace variable fonts.',
+            'PayloadIdentifier': f'me.garbee.monaspace.profile.{version}' if version else 'me.garbee.monaspace.profile',
+            'PayloadType': 'Configuration',
+            'PayloadUUID': str(uuid.uuid4()),
+            'PayloadVersion': 1,
+            'PayloadOrganization': 'Jonathan Garbee',
+          }
+          out_name = f'monaspace-fonts-{version}.mobileconfig' if version else 'monaspace-fonts.mobileconfig'
+          with open(out_name, 'wb') as fp:
+            plistlib.dump(profile, fp, fmt=plistlib.FMT_XML, sort_keys=False)
+          print(out_name)
+          PY
+      - name: Upload profile artifact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: monaspace-fonts-${{ inputs.version }}
+          path: monaspace-fonts-${{ inputs.version }}.mobileconfig
+          retention-days: 7
+          if-no-files-found: error
+          compression-level: 0
