@@ -60,5 +60,8 @@ jobs:
       - get-version
     if: needs.get-version.outputs.match_found == 'false'
     uses: ./.github/workflows/build-monaspace-profiles.yml
+    permissions:
+      contents: read
+      actions: write
     with:
       version: ${{ needs.get-version.outputs.version }}
