@@ -80,10 +80,6 @@ jobs:
             --fontname="Monaspace Variable"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
-            --dir="monaspace/otf" \
-            --fontname="Monaspace OTF"
-          node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen" \
             --fontname="Monaspace Frozen"
           node scripts/build-profile.js \
@@ -126,22 +122,11 @@ jobs:
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen/xenon" \
             --fontname="Monaspace Frozen Xenon"
-      # Upload each mobileconfig file individually
-      - name: List all configs for debugging
-        run: ls *.mobileconfig
       - name: Upload Monaspace Variable
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: Monaspace Variable
           path: Monaspace Variable Fonts.mobileconfig
-          retention-days: 7
-          compression-level: 9
-          if-no-files-found: error
-      - name: Upload Monaspace OTF
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
-        with:
-          name: Monaspace OTF
-          path: Monaspace OTF Fonts.mobileconfig
           retention-days: 7
           compression-level: 9
           if-no-files-found: error
@@ -230,6 +215,14 @@ jobs:
         with:
           name: Monaspace Frozen Xenon
           path: Monaspace Frozen Xenon Fonts.mobileconfig
+          retention-days: 7
+          compression-level: 9
+          if-no-files-found: error
+      - name: Upload bundle
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: Monaspace Configs
+          path: "*.mobileconfig"
           retention-days: 7
           compression-level: 9
           if-no-files-found: error

@@ -1,12 +1,13 @@
 name: Check Monaspace latest version
 
+
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   get-version:
@@ -38,7 +39,7 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const tag = process.env.TAG;
+            const tag = `monaspace/${{ steps.get_latest.outputs.result }}`;
             try {
               await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
@@ -65,3 +66,40 @@ jobs:
       actions: write
     with:
       version: ${{ needs.get-version.outputs.version }}
+  make-release:
+    name: Create release for ${{ needs.get-version.outputs.version }}
+    needs:
+      - make-config
+      - get-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Monaspace Configs
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: Monaspace Configs
+          path: configs
+      - name: Checkout repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+      - name: Tag Repository
+        run: |
+          git tag "monaspace/${{ needs.get-version.outputs.version }}"
+          git push origin "monaspace/${{ needs.get-version.outputs.version }}"
+      - name: Release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        with:
+          name: Monaspace ${{ needs.get-version.outputs.version }}
+          tag_name: monaspace/${{ needs.get-version.outputs.version }}
+          files: "configs/*.mobileconfig"
+          fail_on_unmatched_files: true
+          body: |
+              # Monaspace ${{ needs.get-version.outputs.version }}
+
+              These configurations were generated automatically.
+              There is no copyright against them as all they do
+              is provide the upstream fonts as a profile for Apple devices.
+
+              Variable fonts are not supported on iOS and iPadOS.
+
+              Please refer to the official documentation for more information.
