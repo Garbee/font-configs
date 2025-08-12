@@ -105,8 +105,6 @@ jobs:
             Monaspace Frozen Xenon Fonts.mobileconfig
           fail_on_unmatched_files: true
           body: |
-              # Monaspace ${{ needs.get-version.outputs.version }}
-
               These configurations were generated automatically.
               There is no copyright against them as all they do
               is provide the upstream fonts as a profile for Apple devices.
@@ -118,3 +116,8 @@ jobs:
               have noticeable lag when working with it.
 
               Please refer to the official documentation for more information.
+      - name: Delete tag
+        if: failure()
+        run: |
+          git tag -d "monaspace/${{ needs.get-version.outputs.version }}"
+          git push origin --delete "monaspace/${{ needs.get-version.outputs.version }}"

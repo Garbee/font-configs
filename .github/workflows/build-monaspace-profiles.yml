@@ -69,57 +69,76 @@ jobs:
           unzip -j "$name" "*/fonts/frozen/MonaspaceRadon*" -x "*/.*" -d monaspace/frozen/radon
           unzip -j "$name" "*/fonts/frozen/MonaspaceXenon*" -x "*/.*" -d monaspace/frozen/xenon
           rm -f "$name"
-      - name: Build .mobileconfig profile with fonts
-        env:
-          MONASPACE_VERSION: ${{ inputs.version }}
+      - name: Build Variable
         run: |
-          set -euo pipefail
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/variable" \
             --fontname="Monaspace Variable"
+      - name: Build Frozen
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/frozen" \
             --fontname="Monaspace Frozen"
+      - name: Build OTF Argon
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/otf/argon" \
             --fontname="Monaspace OTF Argon"
+      - name: Build OTF Krypton
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/otf/krypton" \
             --fontname="Monaspace OTF Krypton"
+      - name: Build OTF Neon
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/otf/neon" \
             --fontname="Monaspace OTF Neon"
+      - name: Build OTF Radon
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/otf/radon" \
             --fontname="Monaspace OTF Radon"
+      - name: Build OTF Xenon
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/otf/xenon" \
             --fontname="Monaspace OTF Xenon"
+      - name: Build Frozen Argon
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/frozen/argon" \
             --fontname="Monaspace Frozen Argon"
+      - name: Build Frozen Krypton
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/frozen/krypton" \
             --fontname="Monaspace Frozen Krypton"
+      - name: Build Frozen Neon
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/frozen/neon" \
             --fontname="Monaspace Frozen Neon"
+      - name: Build Frozen Radon
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/frozen/radon" \
             --fontname="Monaspace Frozen Radon"
+      - name: Build Frozen Xenon
+        run: |
           node scripts/build-profile.js \
-            --version="${MONASPACE_VERSION}" \
+            --version="${{ inputs.version }}" \
             --dir="monaspace/frozen/xenon" \
             --fontname="Monaspace Frozen Xenon"
       - name: Upload bundle
@@ -127,6 +146,6 @@ jobs:
         with:
           name: Monaspace Configs
           path: "*.mobileconfig"
-          retention-days: 7
-          compression-level: 9
+          retention-days: 1
+          compression-level: 0
           if-no-files-found: error
