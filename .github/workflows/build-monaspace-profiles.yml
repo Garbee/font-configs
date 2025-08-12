@@ -1,4 +1,4 @@
-name: Make Configuration Profile
+name: Build Monaspace Profiles
 
 on:
   workflow_call:
@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   download-and-unzip:
@@ -125,11 +126,14 @@ jobs:
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen/xenon" \
             --fontname="Monaspace Frozen Xenon Fonts"
-      - name: Upload profile artifact
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
-        with:
-          name: monaspace-fonts-${{ inputs.version }}
-          path: *.mobileconfig
-          retention-days: 7
-          if-no-files-found: error
-          compression-level: 0
+      - name: Upload each mobileconfig individually
+        run: |
+          for file in *.mobileconfig; do
+            echo "Uploading $file"
+            gh run upload-artifact "$file" \
+              --name "$file" \
+              --retention-days 7 \
+              --compression-level 9
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
