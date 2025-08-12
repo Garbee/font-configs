@@ -73,11 +73,6 @@ jobs:
       - get-version
     runs-on: ubuntu-latest
     steps:
-      - name: Download Monaspace Configs
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: Monaspace Configs
-          path: configs
       - name: Checkout repo
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
@@ -86,24 +81,28 @@ jobs:
         run: |
           git tag "monaspace/${{ needs.get-version.outputs.version }}"
           git push origin "monaspace/${{ needs.get-version.outputs.version }}"
+      - name: Download Monaspace Configs
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: Monaspace Configs
       - name: Release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           name: Monaspace ${{ needs.get-version.outputs.version }}
           tag_name: monaspace/${{ needs.get-version.outputs.version }}
           files: |
-            configs/Monaspace Variable Fonts.mobileconfig
-            configs/Monaspace Frozen Fonts.mobileconfig
-            configs/Monaspace OTF Argon Fonts.mobileconfig
-            configs/Monaspace OTF Krypton Fonts.mobileconfig
-            configs/Monaspace OTF Neon Fonts.mobileconfig
-            configs/Monaspace OTF Radon Fonts.mobileconfig
-            configs/Monaspace OTF Xenon Fonts.mobileconfig
-            configs/Monaspace Frozen Argon Fonts.mobileconfig
-            configs/Monaspace Frozen Krypton Fonts.mobileconfig
-            configs/Monaspace Frozen Neon Fonts.mobileconfig
-            configs/Monaspace Frozen Radon Fonts.mobileconfig
-            configs/Monaspace Frozen Xenon Fonts.mobileconfig
+            Monaspace Variable Fonts.mobileconfig
+            Monaspace Frozen Fonts.mobileconfig
+            Monaspace OTF Argon Fonts.mobileconfig
+            Monaspace OTF Krypton Fonts.mobileconfig
+            Monaspace OTF Neon Fonts.mobileconfig
+            Monaspace OTF Radon Fonts.mobileconfig
+            Monaspace OTF Xenon Fonts.mobileconfig
+            Monaspace Frozen Argon Fonts.mobileconfig
+            Monaspace Frozen Krypton Fonts.mobileconfig
+            Monaspace Frozen Neon Fonts.mobileconfig
+            Monaspace Frozen Radon Fonts.mobileconfig
+            Monaspace Frozen Xenon Fonts.mobileconfig
           fail_on_unmatched_files: true
           body: |
               # Monaspace ${{ needs.get-version.outputs.version }}
