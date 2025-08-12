@@ -5,11 +5,11 @@
   This will scan all subfolders as well.
 
   Inputs:
-    - --version=<version>: optional version string for identifiers/filename
+    - --version=<version>: version string for identifiers/filename
     - --dir=<directory>: directory containing font files
     - --fontname=<fontname>: name to use in profile display and identifiers
   Output:
-    - <font name>-<version>.mobileconfig
+    - <font name>.mobileconfig
 */
 import fs from 'fs';
 import path from 'path';
@@ -130,5 +130,5 @@ const profileXml = `
   </plist>
 `;
 
-const outName = `${fontName}-${version}.mobileconfig`;
+const outName = `${fontName}.mobileconfig`;
 fs.writeFileSync(outName, profileXml, 'utf8');
