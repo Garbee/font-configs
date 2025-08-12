@@ -93,6 +93,8 @@ const payloadsXml = fontFiles
         <string>me.garbee.font.${esc(stem)}</string>
         <key>PayloadType</key>
         <string>com.apple.font</string>
+        <key>PayloadVersion</key>
+        <integer>1</integer>
         <key>PayloadUUID</key>
         <string>${crypto.randomUUID()}</string>
       </dict>
