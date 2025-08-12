@@ -91,7 +91,19 @@ jobs:
         with:
           name: Monaspace ${{ needs.get-version.outputs.version }}
           tag_name: monaspace/${{ needs.get-version.outputs.version }}
-          files: "configs/*.mobileconfig"
+          files: |
+            configs/Monaspace Variable Fonts.mobileconfig
+            configs/Monaspace Frozen Fonts.mobileconfig
+            configs/Monaspace OTF Argon Fonts.mobileconfig
+            configs/Monaspace OTF Krypton Fonts.mobileconfig
+            configs/Monaspace OTF Neon Fonts.mobileconfig
+            configs/Monaspace OTF Radon Fonts.mobileconfig
+            configs/Monaspace OTF Xenon Fonts.mobileconfig
+            configs/Monaspace Frozen Argon Fonts.mobileconfig
+            configs/Monaspace Frozen Krypton Fonts.mobileconfig
+            configs/Monaspace Frozen Neon Fonts.mobileconfig
+            configs/Monaspace Frozen Radon Fonts.mobileconfig
+            configs/Monaspace Frozen Xenon Fonts.mobileconfig
           fail_on_unmatched_files: true
           body: |
               # Monaspace ${{ needs.get-version.outputs.version }}
@@ -101,5 +113,9 @@ jobs:
               is provide the upstream fonts as a profile for Apple devices.
 
               Variable fonts are not supported on iOS and iPadOS.
+
+              Frozen has a combined bundle since it is still small in size.
+              OTF does not, since it is large and Apple's system starts to
+              have noticeable lag when working with it.
 
               Please refer to the official documentation for more information.
