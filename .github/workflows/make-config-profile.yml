@@ -54,20 +54,82 @@ jobs:
         run: |
           set -euo pipefail
           name="${{ fromJson(steps.resolve.outputs.result).name }}"
-          unzip -j "$name" "*/fonts/variable/*" -d monaspace_release
+          mkdir -p monaspace/{variable,otf,frozen}
+          mkdir -p monaspace/{otf,frozen}/{argon,krypton,neon,radon,xenon}
+          unzip -j "$name" "*/fonts/variable/*" -d monaspace/variable
+          unzip -j "$name" "*/fonts/otf/MonaspaceArgon*" -d monaspace/otf/argon
+          unzip -j "$name" "*/fonts/otf/MonaspaceKrypton*" -d monaspace/otf/krypton
+          unzip -j "$name" "*/fonts/otf/MonaspaceNeon*" -d monaspace/otf/neon
+          unzip -j "$name" "*/fonts/otf/MonaspaceRadon*" -d monaspace/otf/radon
+          unzip -j "$name" "*/fonts/otf/MonaspaceXenon*" -d monaspace/otf/xenon
+          unzip -j "$name" "*/fonts/frozen/MonaspaceArgon*" -d monaspace/frozen/argon
+          unzip -j "$name" "*/fonts/frozen/MonaspaceKrypton*" -d monaspace/frozen/krypton
+          unzip -j "$name" "*/fonts/frozen/MonaspaceNeon*" -d monaspace/frozen/neon
+          unzip -j "$name" "*/fonts/frozen/MonaspaceRadon*" -d monaspace/frozen/radon
+          unzip -j "$name" "*/fonts/frozen/MonaspaceXenon*" -d monaspace/frozen/xenon
           rm -f "$name"
-          rm -f monaspace_release/._M*
       - name: Build .mobileconfig profile with fonts
         env:
           MONASPACE_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          node scripts/build-profile.js
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/variable" \
+            --fontname="Monaspace Variable Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/otf" \
+            --fontname="Monaspace OTF Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/frozen" \
+            --fontname="Monaspace Frozen Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/otf/argon" \
+            --fontname="Monaspace OTF Argon Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/otf/krypton" \
+            --fontname="Monaspace OTF Krypton Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/otf/neon" \
+            --fontname="Monaspace OTF Neon Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/otf/radon" \
+            --fontname="Monaspace OTF Radon Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/otf/xenon" \
+            --fontname="Monaspace OTF Xenon Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/frozen/argon" \
+            --fontname="Monaspace Frozen Argon Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/frozen/krypton" \
+            --fontname="Monaspace Frozen Krypton Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/frozen/neon" \
+            --fontname="Monaspace Frozen Neon Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/frozen/radon" \
+            --fontname="Monaspace Frozen Radon Fonts"
+          node scripts/build-profile.js \
+            --version="${MONASPACE_VERSION}" \
+            --dir="monaspace/frozen/xenon" \
+            --fontname="Monaspace Frozen Xenon Fonts"
       - name: Upload profile artifact
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: monaspace-fonts-${{ inputs.version }}
-          path: monaspace-fonts-${{ inputs.version }}.mobileconfig
+          path: *.mobileconfig
           retention-days: 7
           if-no-files-found: error
           compression-level: 0
