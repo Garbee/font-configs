@@ -70,7 +70,7 @@ jobs:
           unzip -j "$name" "*/fonts/frozen/MonaspaceXenon*" -d monaspace/frozen/xenon
           rm -f "$name"
           // Delete hidden files in the variable folder
-          rm -f "monaspace/variable/.??*"
+          find . -maxdepth 1 -type f -name ".*" ! -name "." ! -name ".." -delete
       - name: Build .mobileconfig profile with fonts
         env:
           MONASPACE_VERSION: ${{ inputs.version }}
