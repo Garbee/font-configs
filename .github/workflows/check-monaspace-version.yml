@@ -116,6 +116,10 @@ jobs:
               have noticeable lag when working with it.
 
               Please refer to the official documentation for more information.
+
+              These configs are unsigned. If you want signed copies for some reason, file an issue to explain why.
+              Unsigned you can open them and check out the contents to verify.
+              Signed won't reduce any warnings since even if signed they are untrusted.
       - name: Delete tag
         if: failure()
         run: |
