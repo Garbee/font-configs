@@ -77,55 +77,55 @@ jobs:
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/variable" \
-            --fontname="Monaspace Variable Fonts"
+            --fontname="Monaspace Variable"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/otf" \
-            --fontname="Monaspace OTF Fonts"
+            --fontname="Monaspace OTF"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen" \
-            --fontname="Monaspace Frozen Fonts"
+            --fontname="Monaspace Frozen"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/otf/argon" \
-            --fontname="Monaspace OTF Argon Fonts"
+            --fontname="Monaspace OTF Argon"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/otf/krypton" \
-            --fontname="Monaspace OTF Krypton Fonts"
+            --fontname="Monaspace OTF Krypton"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/otf/neon" \
-            --fontname="Monaspace OTF Neon Fonts"
+            --fontname="Monaspace OTF Neon"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/otf/radon" \
-            --fontname="Monaspace OTF Radon Fonts"
+            --fontname="Monaspace OTF Radon"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/otf/xenon" \
-            --fontname="Monaspace OTF Xenon Fonts"
+            --fontname="Monaspace OTF Xenon"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen/argon" \
-            --fontname="Monaspace Frozen Argon Fonts"
+            --fontname="Monaspace Frozen Argon"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen/krypton" \
-            --fontname="Monaspace Frozen Krypton Fonts"
+            --fontname="Monaspace Frozen Krypton"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen/neon" \
-            --fontname="Monaspace Frozen Neon Fonts"
+            --fontname="Monaspace Frozen Neon"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen/radon" \
-            --fontname="Monaspace Frozen Radon Fonts"
+            --fontname="Monaspace Frozen Radon"
           node scripts/build-profile.js \
             --version="${MONASPACE_VERSION}" \
             --dir="monaspace/frozen/xenon" \
-            --fontname="Monaspace Frozen Xenon Fonts"
+            --fontname="Monaspace Frozen Xenon"
       # Upload each mobileconfig file individually
       - name: List all configs for debugging
         run: ls *.mobileconfig

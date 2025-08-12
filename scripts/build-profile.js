@@ -132,5 +132,5 @@ const profileXml = `
   </plist>
 `;
 
-const outName = `${fontName}.mobileconfig`;
+const outName = `${fontName} Fonts.mobileconfig`;
 fs.writeFileSync(outName, profileXml, 'utf8');
