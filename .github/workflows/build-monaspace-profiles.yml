@@ -57,20 +57,18 @@ jobs:
           name="${{ fromJson(steps.resolve.outputs.result).name }}"
           mkdir -p monaspace/{variable,otf,frozen}
           mkdir -p monaspace/{otf,frozen}/{argon,krypton,neon,radon,xenon}
-          unzip -j "$name" "*/fonts/variable/*" -d monaspace/variable
-          unzip -j "$name" "*/fonts/otf/MonaspaceArgon*" -d monaspace/otf/argon
-          unzip -j "$name" "*/fonts/otf/MonaspaceKrypton*" -d monaspace/otf/krypton
-          unzip -j "$name" "*/fonts/otf/MonaspaceNeon*" -d monaspace/otf/neon
-          unzip -j "$name" "*/fonts/otf/MonaspaceRadon*" -d monaspace/otf/radon
-          unzip -j "$name" "*/fonts/otf/MonaspaceXenon*" -d monaspace/otf/xenon
-          unzip -j "$name" "*/fonts/frozen/MonaspaceArgon*" -d monaspace/frozen/argon
-          unzip -j "$name" "*/fonts/frozen/MonaspaceKrypton*" -d monaspace/frozen/krypton
-          unzip -j "$name" "*/fonts/frozen/MonaspaceNeon*" -d monaspace/frozen/neon
-          unzip -j "$name" "*/fonts/frozen/MonaspaceRadon*" -d monaspace/frozen/radon
-          unzip -j "$name" "*/fonts/frozen/MonaspaceXenon*" -d monaspace/frozen/xenon
+          unzip -j "$name" "*/fonts/variable/*" -x "*/.*" -d monaspace/variable
+          unzip -j "$name" "*/fonts/otf/MonaspaceArgon*" -x "*/.*" -d monaspace/otf/argon
+          unzip -j "$name" "*/fonts/otf/MonaspaceKrypton*" -x "*/.*" -d monaspace/otf/krypton
+          unzip -j "$name" "*/fonts/otf/MonaspaceNeon*" -x "*/.*" -d monaspace/otf/neon
+          unzip -j "$name" "*/fonts/otf/MonaspaceRadon*" -x "*/.*" -d monaspace/otf/radon
+          unzip -j "$name" "*/fonts/otf/MonaspaceXenon*" -x "*/.*" -d monaspace/otf/xenon
+          unzip -j "$name" "*/fonts/frozen/MonaspaceArgon*" -x "*/.*" -d monaspace/frozen/argon
+          unzip -j "$name" "*/fonts/frozen/MonaspaceKrypton*" -x "*/.*" -d monaspace/frozen/krypton
+          unzip -j "$name" "*/fonts/frozen/MonaspaceNeon*" -x "*/.*" -d monaspace/frozen/neon
+          unzip -j "$name" "*/fonts/frozen/MonaspaceRadon*" -x "*/.*" -d monaspace/frozen/radon
+          unzip -j "$name" "*/fonts/frozen/MonaspaceXenon*" -x "*/.*" -d monaspace/frozen/xenon
           rm -f "$name"
-          // Delete hidden files in the variable folder
-          find . -maxdepth 1 -type f -name ".*" ! -name "." ! -name ".." -delete
       - name: Build .mobileconfig profile with fonts
         env:
           MONASPACE_VERSION: ${{ inputs.version }}
