@@ -1,0 +1,108 @@
+name: Build Cascadia Profiles
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Cascadia release tag (e.g. v1.200.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  download-and-unzip:
+    name: Download and unzip cascadia ${{ inputs.version }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Resolve release asset URL
+        id: resolve
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          result-encoding: json
+          script: |
+            const version = `${{ inputs.version }}`;
+            try {
+              const { data: rel } = await github.rest.repos.getReleaseByTag({
+                owner: 'microsoft',
+                repo: 'cascadia-code',
+                tag: version,
+              });
+              const assets = rel.assets || [];
+              // Prefer a .zip asset (common for font bundles)
+              const zip = assets.find(a => a.name && a.name.toLowerCase().endsWith('.zip')) || null;
+              if (!zip) {
+                core.setFailed(`No .zip assets found for cascadia release ${version}`);
+                return;
+              }
+              core.info(`Selected asset: ${zip.name}`);
+              return { url: zip.browser_download_url, name: zip.name };
+            } catch (err) {
+              core.setFailed(`Failed to resolve cascadia release ${version}: ${err.message}`);
+            }
+      - name: Download asset
+        run: |
+          url="${{ fromJson(steps.resolve.outputs.result).url }}"
+          name="${{ fromJson(steps.resolve.outputs.result).name }}"
+          echo "Downloading $name from $url"
+          curl -L --fail -o "$name" "$url"
+      - name: Unzip asset
+        run: |
+          name="${{ fromJson(steps.resolve.outputs.result).name }}"
+          mkdir -p cascadia/{pl,nf,standard,static}
+          mkdir -p cascadia/static/{pl,nf,standard}
+          unzip -j "$name" "ttf/*PL*" -x "ttf/static/*" "ttf/.*" -d cascadia/pl/
+          unzip -j "$name" "ttf/*NF*" -x "ttf/static/*" "ttf/.*" -d cascadia/nf/
+          unzip -j "$name" "ttf/*" -x "ttf/static/*" "ttf/.*" "ttf/*PL*" "ttf/*NF*" -d cascadia/standard/
+          unzip -j "$name" "ttf/static/*" -x "ttf/static/.*" "ttf/static/*PL*" "ttf/static/*NF*" -d cascadia/static/standard
+          unzip -j "$name" "ttf/static/*PL*" -x "ttf/static/.*" -d cascadia/static/pl/
+          unzip -j "$name" "ttf/static/*NF*" -x "ttf/static/.*" -d cascadia/static/nf/
+          rm -f "$name"
+      - name: Build Variable
+        run: |
+          node scripts/build-profile.js \
+            --version="${{ inputs.version }}" \
+            --dir="cascadia/standard" \
+            --fontname="Cascadia Variable"
+      - name: Build Static
+        run: |
+          node scripts/build-profile.js \
+            --version="${{ inputs.version }}" \
+            --dir="cascadia/static/standard" \
+            --fontname="Cascadia Static"
+      - name: Build Nerd Font
+        run: |
+          node scripts/build-profile.js \
+            --version="${{ inputs.version }}" \
+            --dir="cascadia/nf" \
+            --fontname="Cascadia Nerd Font"
+      - name: Build Static Nerd Font
+        run: |
+          node scripts/build-profile.js \
+            --version="${{ inputs.version }}" \
+            --dir="cascadia/static/nf" \
+            --fontname="Cascadia Static Nerd Font"
+      - name: Build Powerline Font
+        run: |
+          node scripts/build-profile.js \
+            --version="${{ inputs.version }}" \
+            --dir="cascadia/pl" \
+            --fontname="Cascadia Powerline"
+      - name: Build Static Powerline Font
+        run: |
+          node scripts/build-profile.js \
+            --version="${{ inputs.version }}" \
+            --dir="cascadia/static/pl" \
+            --fontname="Cascadia Static Powerline"
+      - name: Upload bundle
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: Cascadia Configs
+          path: "*.mobileconfig"
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error

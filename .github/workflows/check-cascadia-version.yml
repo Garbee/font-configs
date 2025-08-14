@@ -1,0 +1,115 @@
+name: Check Cascadia latest version
+
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  get-version:
+    name: Get latest release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_latest.outputs.result }}
+      match_found: ${{ steps.check_release.outputs.result }}
+    steps:
+      - name: Fetch latest cascadia release
+        id: get_latest
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          result-encoding: string
+          script: |
+            try {
+              const rel = await github.rest.repos.getLatestRelease({ owner: 'microsoft', repo: 'cascadia-code' });
+              core.info(`Latest release tag: ${rel.data.tag_name}`);
+              // actions/github-script exposes the returned value as step output 'result'
+              return rel.data.tag_name;
+            } catch (error) {
+              core.setFailed(`Failed to fetch latest release: ${error.message}`);
+            }
+      - name: Check for matching release in this repo
+        id: check_release
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          TAG: ${{ steps.get_latest.outputs.result }}
+        with:
+          result-encoding: string
+          script: |
+            const tag = `cascadia/${{ steps.get_latest.outputs.result }}`;
+            try {
+              await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+              core.info(`Found release with tag ${tag} in ${context.repo.owner}/${context.repo.repo}`);
+              return 'true';
+            } catch (error) {
+              if (error.status === 404) {
+                core.info(`No release with tag ${tag} in ${context.repo.owner}/${context.repo.repo}`);
+                return 'false';
+              }
+              core.setFailed(`Failed to check release in current repo: ${error.message}`);
+            }
+  make-config:
+    name: Make configuration profile for ${{ needs.get-version.outputs.version }}
+    needs:
+      - get-version
+    if: needs.get-version.outputs.match_found == 'false'
+    uses: ./.github/workflows/build-cascadia-profiles.yml
+    permissions:
+      contents: read
+      actions: write
+    with:
+      version: ${{ needs.get-version.outputs.version }}
+  make-release:
+    name: Create release for ${{ needs.get-version.outputs.version }}
+    needs:
+      - make-config
+      - get-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+      - name: Tag Repository
+        run: |
+          git tag "cascadia/${{ needs.get-version.outputs.version }}"
+          git push origin "cascadia/${{ needs.get-version.outputs.version }}"
+      - name: Download Cascadia Configs
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: Cascadia Configs
+      - name: Release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        with:
+          name: Cascadia ${{ needs.get-version.outputs.version }}
+          tag_name: cascadia/${{ needs.get-version.outputs.version }}
+          files: |
+            Cascadia Nerd Font Fonts.mobileconfig
+            Cascadia Powerline Fonts.mobileconfig
+            Cascadia Static Fonts.mobileconfig
+            Cascadia Static Nerd Font Fonts.mobileconfig
+            Cascadia Static Powerline Fonts.mobileconfig
+            Cascadia Variable Fonts.mobileconfig
+          fail_on_unmatched_files: true
+          body: |
+              These configurations were generated automatically.
+              There is no copyright against them as all they do
+              is provide the upstream fonts as a profile for Apple devices.
+
+              Please refer to the official documentation for more information.
+
+              These configs are unsigned. If you want signed copies for some reason, file an issue to explain why.
+              Unsigned you can open them and check out the contents to verify.
+              Signed won't reduce any warnings since even if signed they are untrusted.
+      - name: Delete tag
+        if: failure()
+        run: |
+          git tag -d "cascadia/${{ needs.get-version.outputs.version }}"
+          git push origin --delete "cascadia/${{ needs.get-version.outputs.version }}"
