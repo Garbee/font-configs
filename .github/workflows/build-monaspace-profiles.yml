@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Resolve release asset URL
+      - name: Resolve release asset URLs
         id: resolve
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
@@ -33,42 +33,72 @@ jobs:
                 tag: version,
               });
               const assets = rel.assets || [];
-              // Prefer a .zip asset (common for font bundles)
-              const zip = assets.find(a => a.name && a.name.toLowerCase().endsWith('.zip')) || null;
-              if (!zip) {
-                core.setFailed(`No .zip assets found for monaspace release ${version}`);
+              
+              // Find the three required zip files
+              const variableZip = assets.find(a => a.name && a.name.includes('variable') && a.name.endsWith('.zip') && !a.name.includes('webfont'));
+              const staticZip = assets.find(a => a.name && a.name.includes('static') && a.name.endsWith('.zip') && !a.name.includes('webfont'));
+              const frozenZip = assets.find(a => a.name && a.name.includes('frozen') && a.name.endsWith('.zip') && !a.name.includes('webfont'));
+              
+              if (!variableZip || !staticZip || !frozenZip) {
+                core.setFailed(`Missing required zip assets for monaspace release ${version}. Found: variable=${!!variableZip}, static=${!!staticZip}, frozen=${!!frozenZip}`);
                 return;
               }
-              core.info(`Selected asset: ${zip.name}`);
-              return { url: zip.browser_download_url, name: zip.name };
+              
+              core.info(`Selected assets: ${variableZip.name}, ${staticZip.name}, ${frozenZip.name}`);
+              return {
+                variable: { url: variableZip.browser_download_url, name: variableZip.name },
+                static: { url: staticZip.browser_download_url, name: staticZip.name },
+                frozen: { url: frozenZip.browser_download_url, name: frozenZip.name }
+              };
             } catch (err) {
               core.setFailed(`Failed to resolve monaspace release ${version}: ${err.message}`);
             }
-      - name: Download asset
+      - name: Download assets
         run: |
           set -euo pipefail
-          url="${{ fromJson(steps.resolve.outputs.result).url }}"
-          name="${{ fromJson(steps.resolve.outputs.result).name }}"
-          echo "Downloading $name from $url"
-          curl -L --fail -o "$name" "$url"
-      - name: Unzip asset
+          variable_url="${{ fromJson(steps.resolve.outputs.result).variable.url }}"
+          variable_name="${{ fromJson(steps.resolve.outputs.result).variable.name }}"
+          static_url="${{ fromJson(steps.resolve.outputs.result).static.url }}"
+          static_name="${{ fromJson(steps.resolve.outputs.result).static.name }}"
+          frozen_url="${{ fromJson(steps.resolve.outputs.result).frozen.url }}"
+          frozen_name="${{ fromJson(steps.resolve.outputs.result).frozen.name }}"
+          
+          echo "Downloading $variable_name from $variable_url"
+          curl -L --fail -o "$variable_name" "$variable_url"
+          
+          echo "Downloading $static_name from $static_url"
+          curl -L --fail -o "$static_name" "$static_url"
+          
+          echo "Downloading $frozen_name from $frozen_url"
+          curl -L --fail -o "$frozen_name" "$frozen_url"
+      - name: Unzip assets
         run: |
           set -euo pipefail
-          name="${{ fromJson(steps.resolve.outputs.result).name }}"
+          variable_name="${{ fromJson(steps.resolve.outputs.result).variable.name }}"
+          static_name="${{ fromJson(steps.resolve.outputs.result).static.name }}"
+          frozen_name="${{ fromJson(steps.resolve.outputs.result).frozen.name }}"
+          
           mkdir -p monaspace/{variable,otf,frozen}
           mkdir -p monaspace/{otf,frozen}/{argon,krypton,neon,radon,xenon}
-          unzip -j "$name" "*/fonts/variable/*" -x "*/.*" -d monaspace/variable
-          unzip -j "$name" "*/fonts/otf/MonaspaceArgon*" -x "*/.*" -d monaspace/otf/argon
-          unzip -j "$name" "*/fonts/otf/MonaspaceKrypton*" -x "*/.*" -d monaspace/otf/krypton
-          unzip -j "$name" "*/fonts/otf/MonaspaceNeon*" -x "*/.*" -d monaspace/otf/neon
-          unzip -j "$name" "*/fonts/otf/MonaspaceRadon*" -x "*/.*" -d monaspace/otf/radon
-          unzip -j "$name" "*/fonts/otf/MonaspaceXenon*" -x "*/.*" -d monaspace/otf/xenon
-          unzip -j "$name" "*/fonts/frozen/MonaspaceArgon*" -x "*/.*" -d monaspace/frozen/argon
-          unzip -j "$name" "*/fonts/frozen/MonaspaceKrypton*" -x "*/.*" -d monaspace/frozen/krypton
-          unzip -j "$name" "*/fonts/frozen/MonaspaceNeon*" -x "*/.*" -d monaspace/frozen/neon
-          unzip -j "$name" "*/fonts/frozen/MonaspaceRadon*" -x "*/.*" -d monaspace/frozen/radon
-          unzip -j "$name" "*/fonts/frozen/MonaspaceXenon*" -x "*/.*" -d monaspace/frozen/xenon
-          rm -f "$name"
+          
+          # Extract variable fonts
+          unzip -j "$variable_name" "Variable Fonts/Monaspace*/*" -x "*/.*" -d monaspace/variable
+          
+          # Extract static fonts (formerly OTF)
+          unzip -j "$static_name" "Static Fonts/Monaspace Argon/*" -x "*/.*" -d monaspace/otf/argon
+          unzip -j "$static_name" "Static Fonts/Monaspace Krypton/*" -x "*/.*" -d monaspace/otf/krypton
+          unzip -j "$static_name" "Static Fonts/Monaspace Neon/*" -x "*/.*" -d monaspace/otf/neon
+          unzip -j "$static_name" "Static Fonts/Monaspace Radon/*" -x "*/.*" -d monaspace/otf/radon
+          unzip -j "$static_name" "Static Fonts/Monaspace Xenon/*" -x "*/.*" -d monaspace/otf/xenon
+          
+          # Extract frozen fonts
+          unzip -j "$frozen_name" "Frozen Fonts/Monaspace Argon/*" -x "*/.*" -d monaspace/frozen/argon
+          unzip -j "$frozen_name" "Frozen Fonts/Monaspace Krypton/*" -x "*/.*" -d monaspace/frozen/krypton
+          unzip -j "$frozen_name" "Frozen Fonts/Monaspace Neon/*" -x "*/.*" -d monaspace/frozen/neon
+          unzip -j "$frozen_name" "Frozen Fonts/Monaspace Radon/*" -x "*/.*" -d monaspace/frozen/radon
+          unzip -j "$frozen_name" "Frozen Fonts/Monaspace Xenon/*" -x "*/.*" -d monaspace/frozen/xenon
+          
+          rm -f "$variable_name" "$static_name" "$frozen_name"
       - name: Build Variable
         run: |
           node scripts/build-profile.js \
