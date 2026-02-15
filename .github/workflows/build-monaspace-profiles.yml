@@ -35,7 +35,7 @@ jobs:
               const assets = rel.assets || [];
               
               // Find the three required zip files
-              const variableZip = assets.find(a => a.name && a.name.includes('variable') && a.name.endsWith('.zip'));
+              const variableZip = assets.find(a => a.name && a.name.includes('variable') && a.name.endsWith('.zip') && !a.name.includes('webfont'));
               const staticZip = assets.find(a => a.name && a.name.includes('static') && a.name.endsWith('.zip') && !a.name.includes('webfont'));
               const frozenZip = assets.find(a => a.name && a.name.includes('frozen') && a.name.endsWith('.zip') && !a.name.includes('webfont'));
               
