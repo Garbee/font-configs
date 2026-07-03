@@ -14,29 +14,33 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { parseArgs } from 'util';
 
-const args = process.argv.slice(2);
+const { values } = parseArgs({
+  options: {
+    version: { type: 'string' },
+    dir: { type: 'string' },
+    fontname: { type: 'string' },
+  },
+});
 
-const versionArg = args.find((arg) => arg.startsWith('--version='));
-if (!versionArg) {
+if (!values.version) {
   console.error('No version argument provided. Please specify a version with --version=<version>.');
   process.exit(1);
 }
-const version = versionArg.split('=')[1].trim();
+const version = values.version.trim();
 
-const dirArg = args.find((arg) => arg.startsWith('--dir='));
-if (!dirArg) {
+if (!values.dir) {
   console.error('No directory argument provided. Please specify a directory with --dir=<directory>.');
   process.exit(1);
 }
-const fontDir = dirArg.split('=')[1].trim();
+const fontDir = values.dir.trim();
 
-const fontNameArg = args.find((arg) => arg.startsWith('--fontname='));
-if (!fontNameArg) {
+if (!values.fontname) {
   console.error('No fontname argument provided. Please specify a fontname with --fontname=<fontname>.');
   process.exit(1);
 }
-const fontName = fontNameArg.split('=')[1].trim();
+const fontName = values.fontname.trim();
 
 if (!fs.existsSync(fontDir) || !fs.statSync(fontDir).isDirectory()) {
   console.error(`Font directory not found: ${fontDir}`);
